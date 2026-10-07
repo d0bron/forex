@@ -83,14 +83,14 @@ namespace cAlgo.Robots
                 return;
             }
 
-            // Wenn der Monthly Kontext nicht aktiv ist, brechen wir ab (keine Trades außerhalb der Zone)
+            // Wenn der Monthly Kontext nicht aktiv ist, brechen wir ab
             if (!_monthlyContextActive)
             {
                 return;
             }
 
             // =========================================================================
-            // SCHRITT 2: DAILY ENTRY SETUP (FVG + SWING HIGH OVERLAP)
+            // SCHRITT 2: DAILY ENTRY SETUP (FVG + SWING HIGH BODY OVERLAP)
             // =========================================================================
             
             // 1. Bullische FVG-Erkennung (3-Kerzen-Muster im Daily Chart)
@@ -99,8 +99,8 @@ namespace cAlgo.Robots
 
             if (gapBottom < gapTop && _lastFvgBar != i)
             {
-                // 2. Swing High Suche vor dem Gap (auf dem Daily Chart)
-                double swingHighPrice = -1;
+                // 2. Swing High Body Suche vor dem Gap (auf dem Daily Chart)
+                double swingHighBodyPrice = -1;
                 bool swingFound = false;
 
                 for (int j = i - 4; j >= i - 4 - Lookback && j >= 2; j--)
@@ -112,28 +112,32 @@ namespace cAlgo.Robots
                         continue;
                     }
 
-                    // Exakte Swing High Definition im Daily
-                    if (Bars.HighPrices[j] > Bars.HighPrices[j - 1] && 
-                        Bars.HighPrices[j] > Bars.HighPrices[j + 1])
+                    // Berechnung der Kerzenkörper-Höhen
+                    double currentBodyHigh = Math.Max(Bars.OpenPrices[j], Bars.ClosePrices[j]);
+                    double prevBodyHigh = Math.Max(Bars.OpenPrices[j - 1], Bars.ClosePrices[j - 1]);
+                    double nextBodyHigh = Math.Max(Bars.OpenPrices[j + 1], Bars.ClosePrices[j + 1]);
+
+                    // Swing High Definition basierend auf dem BODY
+                    if (currentBodyHigh > prevBodyHigh && currentBodyHigh > nextBodyHigh)
                     {
-                        swingHighPrice = Bars.HighPrices[j];
+                        swingHighBodyPrice = currentBodyHigh;
                         swingFound = true;
-                        break; // Nimm das frischeste gültige Swing High
+                        break; // Nimm das frischeste gültige Swing High Body
                     }
                 }
 
-                // 3. Einstiegs-Logik (Overlap im FVG)
+                // 3. Einstiegs-Logik (Body Overlap im FVG)
                 bool validSetup = false;
                 double entryPrice = 0;
 
                 if (swingFound)
                 {
-                    // Prüfen, ob das Swing High exakt im FVG-Bereich liegt
-                    if (swingHighPrice >= gapBottom && swingHighPrice <= gapTop)
+                    // Prüfen, ob das Swing High BODY exakt im FVG-Bereich liegt
+                    if (swingHighBodyPrice >= gapBottom && swingHighBodyPrice <= gapTop)
                     {
-                        entryPrice = swingHighPrice;
+                        entryPrice = swingHighBodyPrice; // Entry genau auf Höhe des Kerzenkörpers
                         validSetup = true;
-                        Print("🎯 Daily Entry gefunden: Entry bei {0} (FVG: {1} - {2}) im Monthly Context", entryPrice, gapBottom, gapTop);
+                        Print("🎯 Daily Entry gefunden: Entry-Limit am Body bei {0} (FVG: {1} - {2})", entryPrice, gapBottom, gapTop);
                     }
                 }
 
@@ -174,7 +178,7 @@ namespace cAlgo.Robots
                         _lastFvgBar = i;
 
                         // Visualisierung im Chart
-                        Chart.DrawHorizontalLine("Entry_PD_" + i, entryPrice, Color.Gold, 2);
+                        Chart.DrawHorizontalLine("Entry_Body_" + i, entryPrice, Color.Gold, 2);
                         Chart.DrawHorizontalLine("SL_" + i, slPrice, Color.Red, 1, LineStyle.Lines);
                     }
                 }
