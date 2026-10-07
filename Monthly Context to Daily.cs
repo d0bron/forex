@@ -3,7 +3,7 @@ using System.Linq;
 using cAlgo.API;
 using cAlgo.API.Internals;
 
-namespace cAlgo.Robots
+namespace cAlgo.Robotsx
 {
     [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.None)]
     public class FVG_Monthly_Daily_Bot : Robot
