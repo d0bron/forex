@@ -6,7 +6,7 @@ using cAlgo.API.Internals;
 namespace cAlgo.Robotsx
 {
     [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.None)]
-    public class FVG_Monthly_Daily_Bot : Robot
+    public class FVG_Monthly_Daily_Bot : Robots
     {
         #region Risk Management Parameters
         [Parameter("Risk per Trade (%)", Group = "Risk Management", DefaultValue = 1.0, MinValue = 0.1)]
